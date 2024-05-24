@@ -3,9 +3,14 @@
 
 class FeedbackArrays {
     std::string correctFeedback[5];
-    int pointerCorrectArray = 0;
     std::string incorrectFeedback[5];
-    int pointerIncorrectArray = 0;
+
+    private:
+        int pointerCorrectArray = 0;
+        int pointerIncorrectArray = 0;
+
+    public:
+    FeedbackArrays() {}
 
     // CAUTION: There can be only a maximum of 9 files for each of the correct and incorrect arrays (more is not necessary anyways)
     // each feedback file is of the form: feedback/[in]correct/00[index_digit]
@@ -27,12 +32,9 @@ class FeedbackArrays {
     }
 
     std::string getNextInCorrectFeedback() {
-        std::string next = inCorrectFeedback[pointerIncorrectArray];
+        std::string next = incorrectFeedback[pointerIncorrectArray];
         pointerIncorrectArray = (pointerIncorrectArray + 1) % 5;
     }
 
 
-}
-
-
-
+};
