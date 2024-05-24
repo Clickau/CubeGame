@@ -5,6 +5,7 @@
     speaking_explanation,
     speaking_score,
     speaking_player_turn,
+    speaking_category,
     speaking_category_selection,
     speaking_game_end,
     speaking_question,

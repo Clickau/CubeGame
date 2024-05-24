@@ -13,12 +13,12 @@
 State state = State::speaking_player_turn; // todo speaking
 int topSide =  gyro_get_orientation();
 
-const int total_rounds = 6;
+const int total_rounds = 4;
 rounds_left_to_play = total_rounds;
 
 std::vector<Player> players;
-players.emplace_back("Player 1", "turn.player_1.mp3");
-players.emplace_back("Player 2", "turn.player_2.mp3");
+players.emplace_back("Player 1", "turn/turn_player1.mp3");
+players.emplace_back("Player 2", "turn/turn_player2.mp3");
 
 current_player_index = 1;
 
@@ -35,18 +35,18 @@ void change_current_player() {
     if (current_player_index >= players.size()) {
         current_player_index = 0;
     }
-    speaker_play_file(players[current_player_index].path_to_player_turn)
+    speaker_play_file(players[current_player_index].path_to_player_turn);
 }
 
 void game_end() {
     if(players[0].points > players[1].points) {
-        speaker_play_file("end/player_1.mp3")
+        speaker_play_file("end/winner_player1.mp3");
     }
     else if(players[1].points > players[0].points) {
-        speaker_play_file("end/player_2.mp3")
+        speaker_play_file("end/winner_player2.mp3");
     }
     else {
-        speaker_play_file("end/tie.mp3")
+        speaker_play_file("end/winner_neutral.mp3");
     }
 }
 
@@ -61,16 +61,25 @@ void set_category_colors() {
     for(int i = 0; i < qg.categories.size(); ++i){
         uint32_t colors[12];
         for (int a = 0; a < 12; a++) {
-            colors[a] = qg.categories[i].color
+            colors[a] = qg.categories[i].color;
         }
-        led_display_side(neighbors[i], colors)
-        qg.categories[i].setCurrentSide(neighbors[i])
+        led_display_side(neighbors[i], colors);
+        qg.categories[i].setCurrentSide(neighbors[i]);
     }
 } 
 
 void set_true_false_colors() {
     led_display_side(current_true_false_sides[0], colors_red);
     led_display_side(current_true_false_sides[1], colors_green);
+}
+
+void play_category() {
+    for (const auto& category : qg.categories) {
+        if(category.current_side == topSide) {
+            std::string path = "category/category_" + category.name + ".mp3";
+            speaker_play_file(current_question.path_to_question);
+        }
+    }
 }
 
 void select_and_play_question() {
@@ -86,10 +95,10 @@ void select_and_play_question() {
 void check_answer(bool answer) {
     if(answer == current_question.answer) {
         players[current_player_index].addPoint();
-        speaker_play_file("feedback/correct/001.mp3")
+        speaker_play_file("feedback/correct/001.mp3");
     }
     else {
-        speaker_play_file("feedback/incorrect/001.mp3")
+        speaker_play_file("feedback/incorrect/001.mp3");
     }
 }
 
@@ -137,7 +146,7 @@ void setup() {
         Serial.println();
     }
 
-    change_current_player()
+    change_current_player();
 }
 
 int* getNeighbors() {
@@ -180,9 +189,15 @@ void loop()
             set_category_colors();
             if(topSide != gyro_get_orientation()) {
                 topSide = gyro_get_orientation(); // update topSide
+                play_category();
+                state = State::speaking_category;
+            } break;
+        case State::speaking_category:
+            if(!speaker_is_playing()){
                 select_and_play_question();
                 state = State::speaking_question;
-            } break;
+            }
+            break;
         case State::speaking_question:
             if(!speaker_is_playing()){
                 remove_cube_colors();
