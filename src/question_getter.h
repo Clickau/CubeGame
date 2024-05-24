@@ -2,12 +2,10 @@
 #include "category.h"
 #include <vector>
 #include <string>
-#include <filesystem>
-#include <fstream>
 #include <algorithm>
 #include <random>
 
-namespace fs = std::filesystem;
+#include "sd.h"
 
 class QuestionGetter {
 public:
@@ -39,31 +37,31 @@ public:
 
 private:
     bool readAnswer(const std::string& path) {
-        std::ifstream file(path);
-        std::string line;
-        if (file.is_open() && std::getline(file, line)) {
-            return (line == "true" || line == "1");
-        }
-        return false;
+        File file = sd_open_file(path.c_str());
+        if (!file) return false;
+        String s = file.readStringUntil('\n');
+        return s == "true" || s == "1";
     }
 
     void loadCategories(const std::string& base_path) {
-        for (const auto& category_entry : fs::directory_iterator(base_path)) {
-            if (category_entry.is_directory()) {
-                Category category(category_entry.path().filename().string());
+        File base_dir = sd_open_file(base_path.c_str());
+        while (File category_dir = base_dir.openNextFile()) {
+            if (category_dir.isDirectory()) {
+                Category category(category_dir.name());
 
-                for (const auto& question_entry : fs::directory_iterator(category_entry.path())) {
-                    if (question_entry.is_directory()) {
-                        std::string question_number = question_entry.path().filename().string();
-                        std::string question_path = (question_entry.path() / (question_number + "_que.wav")).string();
-                        std::string answer_path = (question_entry.path() / (question_number + "_ans.txt")).string();
-                        std::string explanation_path = (question_entry.path() / (question_number + "_exp.wav")).string();
-                        
+                while (File question_file = category_dir.openNextFile()) {
+                    if (question_file.isDirectory()) {
+                        const char *question_number = question_file.name();
+                        std::string question_path = std::string(question_file.path()) + question_number + "_que.mp3";
+                        std::string answer_path = std::string(question_file.path()) + question_number + "_ans.txt";
+                        std::string explanation_path = std::string(question_file.path()) + question_number + "_exp.mp3";
+
                         bool answer = readAnswer(answer_path);
                         Question question(question_path, answer, explanation_path);
                         category.addQuestion(question);
                     }
                 }
+
                 categories.push_back(category);
             }
         }
