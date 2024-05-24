@@ -7,6 +7,8 @@
 
 #include "sd.h"
 
+unsigned int colors[] = {0x0000FF, 0x00FF00, 0xFFFF00, 0xFF0000};
+
 class QuestionGetter {
 public:
     std::vector<Category> categories;
@@ -45,10 +47,11 @@ private:
 
     void loadCategories(const std::string& base_path) {
         File base_dir = sd_open_file(base_path.c_str());
+        int counter = 0;
         while (File category_dir = base_dir.openNextFile()) {
             if (category_dir.isDirectory()) {
-                Category category(category_dir.name());
-
+                Category category(category_dir.name(), colors[counter]);
+                ++counter;
                 while (File question_file = category_dir.openNextFile()) {
                     if (question_file.isDirectory()) {
                         const char *question_number = question_file.name();
