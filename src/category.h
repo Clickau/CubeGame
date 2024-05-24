@@ -10,7 +10,7 @@ public:
     unsigned int color;
     int current_side = -1;
 
-    Category(const std::string& category_name, const std::string& color) : name(category_name), color(color) {}
+    Category(const std::string& category_name, unsigned int color) : name(category_name), color(color) {}
     void addQuestion(const Question& question) {
         questions.push_back(question);
     }
