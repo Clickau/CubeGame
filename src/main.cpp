@@ -16,6 +16,9 @@ void setup()
     led_setup();
     sd_setup();
     speaker_setup();
+
+    uint32_t colors[12] = {0xff0000, 0x00ff00, 0x0000ff, 0xffffff};
+    led_display_side(0, colors);
 }
 
 void loop()
