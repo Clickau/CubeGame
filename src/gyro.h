@@ -4,18 +4,8 @@
 // MPU with scl=22, sda=21
 Adafruit_MPU6050 mpu;
 
-enum class Orientation
-{
-    Horizontal,
-    Vertical,
-    Sideways,
-    HorizontalInverse,
-    VerticalInverse,
-    SidewaysInverse,
-    None
-};
-
-Orientation getOrientation()
+// returns the index (0-5) of the side that is up or -1 if it's currently moving
+int gyro_get_orientation()
 {
     sensors_event_t a, g, t;
     mpu.getEvent(&a, &g, &t);
@@ -33,41 +23,19 @@ Orientation getOrientation()
     // Serial.printf("x: %d, y: %d, z: %d, x1: %d, y1: %d, z1: %d\n", x, y, z, x1, y1, z1);
 
     if (x && y && z1 && a.acceleration.z > 0)
-        return Orientation::Horizontal;
+        return 0;
     if (x && y && z1 && a.acceleration.z < 0)
-        return Orientation::HorizontalInverse;
+        return 5;
     if (x && z && y1 && a.acceleration.y > 0)
-        return Orientation::Vertical;
+        return 4;
     if (x && z && y1 && a.acceleration.y < 0)
-        return Orientation::VerticalInverse;
+        return 1;
     if (y && z && x1 && a.acceleration.x > 0)
-        return Orientation::Sideways;
+        return 3;
     if (y && z && x1 && a.acceleration.x < 0)
-        return Orientation::SidewaysInverse;
+        return 2;
     
-    return Orientation::None;
-}
-
-const char *orientationToString(Orientation o)
-{
-    switch (o)
-    {
-    case Orientation::Horizontal:
-        return "Horizontal";
-    case Orientation::HorizontalInverse:
-        return "Horizontal Inverse";
-    case Orientation::Vertical:
-        return "Vertical";
-    case Orientation::VerticalInverse:
-        return "Vertical Inverse";
-    case Orientation::Sideways:
-        return "Sideways";
-    case Orientation::SidewaysInverse:
-        return "Sideways Inverse";
-    case Orientation::None:
-        return "None";
-    }
-    return "";
+    return -1;
 }
 
 void gyro_setup()

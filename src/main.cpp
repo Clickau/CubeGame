@@ -5,7 +5,7 @@
 #include "sd.h"
 #include "speaker.h"
 
-Orientation state;
+int orientation = -1;
 
 void setup()
 {
@@ -16,17 +16,15 @@ void setup()
     led_setup();
     sd_setup();
     speaker_setup();
-
-    state = Orientation::None;
 }
 
 void loop()
 {
-    Orientation o = getOrientation();
-    if (o != state && o != Orientation::None)
+    int o = gyro_get_orientation();
+    if (o != orientation && o != -1)
     {
-        state = o;
-        Serial.println(orientationToString(state));
+        orientation = o;
+        Serial.println(o);
     }
     delay(500);
 }
