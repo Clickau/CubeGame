@@ -1,4 +1,3 @@
-// #include <driver/i2s.h>
 #include <Audio.h>
 
 const int speaker_pin_dout = 22;
@@ -26,6 +25,11 @@ void speaker_pause_resume()
 void speaker_stop_playback()
 {
     audio.stopSong();
+}
+
+bool speaker_is_playing()
+{
+    return audio.isRunning();
 }
 
 void speaker_loop()
