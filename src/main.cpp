@@ -93,6 +93,23 @@ void check_answer(bool answer) {
     }
 }
 
+void play_game_score() {
+    switch(players[current_player_index].points){
+        case 0: 
+            speaker_play_file("score/0.mp3"); break;
+        case 1: 
+            speaker_play_file("score/1.mp3"); break;
+        case 2: 
+            speaker_play_file("score/2.mp3"); break;
+        case 3: 
+            speaker_play_file("score/3.mp3"); break;
+        case 4: 
+            speaker_play_file("score/4.mp3"); break;
+        case 5: 
+            speaker_play_file("score/5.mp3"); break;
+    }
+}
+
 void setup() {
     Serial.begin(115200);
     
@@ -147,10 +164,6 @@ int* getTrueFalseSides() {
  
 void loop()
 {
-    // quiz logic
-    
-    // set the category side numbers
-    //...
     switch(state) { // todo breaks add
         case State::speaking_player_turn:
             if(!speaker_is_playing()){
@@ -195,26 +208,29 @@ void loop()
             } break;
         case State::speaking_feedback:
             if(!speaker_is_playing()){
-                speaker_play_file(current_question.path_to_explanation)
+                speaker_play_file(current_question.path_to_explanation);
+                state = State::speaking_score;
+            }
+            break;
+        case State::speaking_explanation:
+            if(!speaker_is_playing()){
+                speaker_play_file(current_question.path_to_explanation);
                 state = State::speaking_score;
             }
             break;
         case State::speaking_score:
             if(!speaker_is_playing()){
-                speaker_play_file(current_question.path_to_explanation)
-                state = State::speaking_score;
-            }
-            remove_cube_colors();
-            //play audio for playerturn
-
-            //TODO: if/else check game end
-            if(rounds_left_to_play == 0)
-            {
-                game_end();
-                state = State::speaking_game_end;
-            }
-            else{
-                state = State::speaking_player_turn;
+                speaker_play_file(current_question.path_to_explanation);
+                remove_cube_colors();
+                state = State::checking_game_end;
+                if(rounds_left_to_play == 0)
+                {
+                    game_end();
+                    state = State::speaking_game_end;
+                }
+                else{
+                    state = State::speaking_player_turn;
+                }
             }
             break;
         case State::speaking_game_end:
@@ -224,7 +240,6 @@ void loop()
             }
             break;
         default: break;
-        // dummy case to add more cases/states later
     };
     
 }
