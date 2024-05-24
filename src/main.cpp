@@ -1,33 +1,29 @@
 #include <Arduino.h>
 
-#include "gyro.h"
-#include "led.h"
-#include "sd.h"
+
 #include "speaker.h"
+#include "sd.h"
+ 
+unsigned int t;
 
-int orientation = -1;
-
-void setup()
-{
+void setup() {
     Serial.begin(115200);
-    while (!Serial) delay(10);
-
-    gyro_setup();
-    led_setup();
+    
     sd_setup();
     speaker_setup();
-
-    uint32_t colors[12] = {0xff0000, 0x00ff00, 0x0000ff, 0xffffff};
-    led_display_side(0, colors);
+    
+    speaker_play_file("/MYMUSIC.mp3");
+    t = millis();
 }
-
+ 
 void loop()
 {
-    int o = gyro_get_orientation();
-    if (o != orientation && o != -1)
+    // needs to be called regularly without big delays to send audio to speaker
+    speaker_loop();
+    // example how we can stop playing a song after 5 seconds
+    if (millis() - t > 5 * 1000)
     {
-        orientation = o;
-        Serial.println(o);
+        speaker_pause_resume();
+        t = millis();
     }
-    delay(500);
 }
