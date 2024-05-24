@@ -20,7 +20,7 @@ std::vector<Player> players;
 players.emplace_back("Player 1", "turn.player_1.mp3");
 players.emplace_back("Player 2", "turn.player_2.mp3");
 
-current_player_index = 0;
+current_player_index = 1;
 
 Question current_question = nullptr;
 
@@ -91,7 +91,6 @@ void check_answer(bool answer) {
     else {
         speaker_play_file("feedback/incorrect/001.mp3")
     }
-    speaker_play_file(current_question.path_to_explanation)
 }
 
 void setup() {
@@ -120,6 +119,8 @@ void setup() {
         }
         Serial.println();
     }
+
+    change_current_player()
 }
 
 int* getNeighbors() {
@@ -152,14 +153,20 @@ void loop()
     //...
     switch(state) { // todo breaks add
         case State::speaking_player_turn:
-            rounds_left_to_play = rounds_left_to_play - 1;
-            state = State::waiting_for_category_selection;
+            if(!speaker_is_playing()){
+                rounds_left_to_play = rounds_left_to_play - 1;
+                state = State::waiting_for_category_selection;
+            }
+            break;
+        case State::speaking_category_selection:
+            if(!speaker_is_playing()){
+                state = State::waiting_for_category_selection;
+            }
             break;
         case State::waiting_for_category_selection: 
             set_category_colors();
             if(topSide != gyro_get_orientation()) {
                 topSide = gyro_get_orientation(); // update topSide
-                // todo call readQuestion with the current position with getNeighbors()
                 select_and_play_question();
                 state = State::speaking_question;
             } break;
@@ -177,15 +184,26 @@ void loop()
             set_true_false_colors()
             // and conditions implies the side rotation sould be correct (left and right) 
             // index 0 and 2 are true and false for the user to select
-            if(topSide != gyro_get_orientation() && (topSide == current_true_false_sides[0] || topSide == getTrueFalseSides()[1])) {
+            int answer = gyro_get_orientation();
+            if(topSide != answer && (answer == current_true_false_sides[0] || answer == current_true_false_sides[1])) {
                 // reset true false array
                 current_true_false_sides[0] = -1;
-        
+                // maps user selection to boolean
+                check_answer(answer == current_true_false_sides[1]);
                 topSide = gyro_get_orientation(); // update topSide
-                state = State::speaking_answer_explanation_score_turns_or_end;
+                state = State::speaking_feedback;
             } break;
-        // cube speak mode
-        case State::speaking_answer_explanation_score_turns_or_end:
+        case State::speaking_feedback:
+            if(!speaker_is_playing()){
+                speaker_play_file(current_question.path_to_explanation)
+                state = State::speaking_score;
+            }
+            break;
+        case State::speaking_score:
+            if(!speaker_is_playing()){
+                speaker_play_file(current_question.path_to_explanation)
+                state = State::speaking_score;
+            }
             remove_cube_colors();
             //play audio for playerturn
 
@@ -199,13 +217,9 @@ void loop()
                 state = State::speaking_player_turn;
             }
             break;
-    
-        case State::speaking_category_selection:
-            state = State::waiting_for_category_selection;
-            //...
-            break;
         case State::speaking_game_end:
             if(!speaker_is_playing()){
+                rounds_left_to_play = total_rounds;
                 state = State::speaking_player_turn;
             }
             break;
