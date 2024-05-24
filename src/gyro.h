@@ -2,7 +2,8 @@
 #include <Adafruit_MPU6050.h>
 
 
-// MPU with scl=22, sda=21
+const int mpu_pin_scl = 32;
+const int mpu_pin_sda = 33;
 Adafruit_MPU6050 mpu;
 
 // returns the index (0-5) of the side that is up or -1 if it's currently moving
@@ -41,6 +42,7 @@ int gyro_get_orientation()
 
 void gyro_setup()
 {
+    Wire.begin(mpu_pin_sda, mpu_pin_scl);
     mpu.begin();
     mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
     mpu.setGyroRange(MPU6050_RANGE_500_DEG);

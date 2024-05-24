@@ -13,7 +13,7 @@
 State state = State::speaking_player_turn; // todo speaking
 int topSide =  gyro_get_orientation();
 
-const int total_rounds = 4;
+const int total_rounds = 1;
 int rounds_left_to_play = total_rounds;
 
 std::vector<Player> players;
@@ -21,7 +21,7 @@ std::vector<Player> players;
 int current_player_index = 1;
 
 Question current_question("", false, "");
-QuestionGetter qg("/questions");
+QuestionGetter qg;
 
 int current_true_false_sides [] = {-1, -1};
 
@@ -41,14 +41,17 @@ void change_current_player() {
 
 void game_end() {
     if(players[0].points > players[1].points) {
-        speaker_play_file("end/winner_player1.mp3");
+        speaker_play_file("/end/winner_player1.mp3");
     }
     else if(players[1].points > players[0].points) {
-        speaker_play_file("end/winner_player2.mp3");
+        speaker_play_file("/end/winner_player2.mp3");
     }
     else {
-        speaker_play_file("end/winner_neutral.mp3");
+        speaker_play_file("/end/winner_neutral.mp3");
     }
+    players[0].resetPoints();
+    players[1].resetPoints();
+    qg.loadCategories();
 }
 
 void remove_cube_colors() {
@@ -70,6 +73,7 @@ void set_category_colors() {
 } 
 
 void set_true_false_colors() {
+    if (current_true_false_sides[0] == -1 || current_true_false_sides[1] == -1) return;
     led_display_side(current_true_false_sides[0], colors_red);
     led_display_side(current_true_false_sides[1], colors_green);
 }
@@ -77,8 +81,8 @@ void set_true_false_colors() {
 void play_category() {
     for (const auto& category : qg.categories) {
         if(category.current_side == topSide) {
-            std::string path = "category/category_" + category.name + ".mp3";
-            speaker_play_file(current_question.path_to_question.c_str());
+            std::string path = "/category/category_" + category.name + ".mp3";
+            speaker_play_file(path.c_str());
         }
     }
 }
@@ -96,40 +100,50 @@ void select_and_play_question() {
 void check_answer(bool answer) {
     if(answer == current_question.answer) {
         players[current_player_index].addPoint();
-        speaker_play_file("feedback/correct/001.mp3");
+        speaker_play_file("/feedback/correct/001.mp3");
     }
     else {
-        speaker_play_file("feedback/incorrect/001.mp3");
+        speaker_play_file("/feedback/incorrect/001.mp3");
     }
 }
 
 void play_game_score() {
     switch(players[current_player_index].points){
         case 0: 
-            speaker_play_file("score/0.mp3"); break;
+            speaker_play_file("/score/0.mp3"); break;
         case 1: 
-            speaker_play_file("score/1.mp3"); break;
+            speaker_play_file("/score/1.mp3"); break;
         case 2: 
-            speaker_play_file("score/2.mp3"); break;
+            speaker_play_file("/score/2.mp3"); break;
         case 3: 
-            speaker_play_file("score/3.mp3"); break;
+            speaker_play_file("/score/3.mp3"); break;
         case 4: 
-            speaker_play_file("score/4.mp3"); break;
+            speaker_play_file("/score/4.mp3"); break;
         case 5: 
-            speaker_play_file("score/5.mp3"); break;
+            speaker_play_file("/score/5.mp3"); break;
     }
 }
 
 void setup() {
     Serial.begin(115200);
 
-    players.emplace_back("Player 1", "turn/turn_player1.mp3");
-    players.emplace_back("Player 2", "turn/turn_player2.mp3");
+    Player player1("Player 1", "/turn/turn_player1.mp3");
+    Player player2("Player 2", "/turn/turn_player2.mp3");
+    players.push_back(player1);
+    players.push_back(player2);
+
     
     sd_setup();
     speaker_setup();
     gyro_setup();
     led_setup();
+
+    int o;
+    while (o = gyro_get_orientation() == -1)
+    {
+        delay(100);
+    }
+    topSide = o;
 
     qg.loadCategories();
 
@@ -166,8 +180,9 @@ void getTrueFalseSides(int *array) {
  
 void loop()
 {
-    int answer;
-    switch(state) { // todo breaks add
+    speaker_loop();
+    int answer, orientation;
+    switch(state) {
         case State::speaking_player_turn:
             if(!speaker_is_playing()){
                 rounds_left_to_play = rounds_left_to_play - 1;
@@ -181,8 +196,9 @@ void loop()
             break;
         case State::waiting_for_category_selection: 
             set_category_colors();
-            if(topSide != gyro_get_orientation()) {
-                topSide = gyro_get_orientation(); // update topSide
+            orientation = gyro_get_orientation();
+            if(topSide != orientation && orientation != -1) {
+                topSide = orientation; // update topSide
                 play_category();
                 state = State::speaking_category;
             } break;
@@ -217,12 +233,12 @@ void loop()
         case State::speaking_feedback:
             if(!speaker_is_playing()){
                 speaker_play_file(current_question.path_to_explanation.c_str());
-                state = State::speaking_score;
+                state = State::speaking_explanation;
             }
             break;
         case State::speaking_explanation:
             if(!speaker_is_playing()){
-                speaker_play_file(current_question.path_to_explanation.c_str());
+                play_game_score();
                 state = State::speaking_score;
             }
             break;

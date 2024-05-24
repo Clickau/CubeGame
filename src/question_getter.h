@@ -13,9 +13,6 @@ class QuestionGetter {
 public:
     std::vector<Category> categories;
 
-    QuestionGetter(const std::string& base_path) : base_path(base_path) {
-    }
-
     Question getQuestion(const std::string& category_name) {
         auto it = std::find_if(categories.begin(), categories.end(), [&category_name](const Category& category) {
             return category.name == category_name;
@@ -37,7 +34,9 @@ public:
     }
 
     void loadCategories() {
-        File base_dir = sd_open_file(base_path.c_str());
+        const char *base_path = "/questions";
+        categories.clear();
+        File base_dir = sd_open_file(base_path);
         int counter = 0;
         while (File category_dir = base_dir.openNextFile()) {
             if (category_dir.isDirectory()) {
@@ -62,8 +61,6 @@ public:
     }
 
 private:
-    const std::string &base_path;
-
     bool readAnswer(const std::string& path) {
         File file = sd_open_file(path.c_str());
         if (!file) return false;
