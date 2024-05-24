@@ -1,3 +1,4 @@
+#pragma once
 #include <FS.h>
 #include <SD.h>
 #include <SPI.h>
@@ -30,4 +31,10 @@ void sd_print_file(const char *path)
     {
         Serial.println("error opening file");
     }
+}
+
+File sd_open_file(const char *path)
+{
+    File file = SD.open(path);
+    return file;
 }

@@ -1,3 +1,4 @@
+#pragma once
 #include <Audio.h>
 
 const int speaker_pin_dout = 22;
