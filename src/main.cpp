@@ -10,29 +10,39 @@
 #include "question.h"
 
 // current state of the cube
-State state = State::speaking_category_selection; // todo speaking
+State state = State::speaking_player_turn; // todo speaking
 int topSide =  gyro_get_orientation();
 
+const int total_rounds = 6;
+rounds_left_to_play = total_rounds;
+
 std::vector<Player> players;
-players.emplace_back("Player 1");
-players.emplace_back("Player 2");
+players.emplace_back("Player 1", "turn.player_1.mp3");
+players.emplace_back("Player 2", "turn.player_2.mp3");
 
 current_player_index = 0;
 
 Question current_question = nullptr;
+
+int current_true_false_sides [] = {-1, -1};
+
+uint32_t colors_red[12];
+uint32_t colors_green[12];
+uint32_t colors_black[12];
 
 void change_current_player() {
     current_player_index++;
     if (current_player_index >= players.size()) {
         current_player_index = 0;
     }
+    speaker_play_file(players[current_player_index].path_to_player_turn)
 }
 
 void game_end() {
-    if(players[0] > players[1]) {
+    if(players[0].points > players[1].points) {
         speaker_play_file("end/player_1.mp3")
     }
-    else if(players[1] > players[0]) {
+    else if(players[1].points > players[0].points) {
         speaker_play_file("end/player_2.mp3")
     }
     else {
@@ -40,12 +50,18 @@ void game_end() {
     }
 }
 
+void remove_cube_colors() {
+    for(int i = 0; i < 6; ++i){
+        led_display_side(i, colors_black);
+    }
+}
+
 void set_category_colors() {
     int neighbors [] = getNeighbors();
     for(int i = 0; i < qg.categories.size(); ++i){
         uint32_t colors[12];
-        for (int i = 0; i < 12; i++) {
-            colors[i] = qg.categories[i].color
+        for (int a = 0; a < 12; a++) {
+            colors[a] = qg.categories[i].color
         }
         led_display_side(neighbors[i], colors)
         qg.categories[i].setCurrentSide(neighbors[i])
@@ -53,7 +69,8 @@ void set_category_colors() {
 } 
 
 void set_true_false_colors() {
-    
+    led_display_side(current_true_false_sides[0], colors_red);
+    led_display_side(current_true_false_sides[1], colors_green);
 }
 
 void select_and_play_question() {
@@ -85,6 +102,12 @@ void setup() {
 
     sd_print_file("/test.txt");
     QuestionGetter qg("/categories");
+
+    for (int a = 0; a < 12; a++) {
+        colors_red[a] = 0xff0000;
+        colors_green[a] = 0x00ff00;
+        colors_black[a] = 0x000000;
+    }
     
     for (const auto &c : qg.categories)
     {
@@ -120,8 +143,6 @@ int* getTrueFalseSides() {
     int trueFalseSides[] = {falseSide, trueSide};
     return trueFalseSides;
 }
-
-int current_true_false_sides [] = {-1, -1};
  
 void loop()
 {
@@ -130,6 +151,10 @@ void loop()
     // set the category side numbers
     //...
     switch(state) { // todo breaks add
+        case State::speaking_player_turn:
+            rounds_left_to_play = rounds_left_to_play - 1;
+            state = State::waiting_for_category_selection;
+            break;
         case State::waiting_for_category_selection: 
             set_category_colors();
             if(topSide != gyro_get_orientation()) {
@@ -140,6 +165,7 @@ void loop()
             } break;
         case State::speaking_question:
             if(!speaker_is_playing()){
+                remove_cube_colors();
                 state = State::waiting_for_answer_selection;
             }
             break;
@@ -148,7 +174,7 @@ void loop()
                 current_true_false_sides[0] = getTrueFalseSides()[0];
                 current_true_false_sides[1] = getTrueFalseSides()[1];
             }
-    
+            set_true_false_colors()
             // and conditions implies the side rotation sould be correct (left and right) 
             // index 0 and 2 are true and false for the user to select
             if(topSide != gyro_get_orientation() && (topSide == current_true_false_sides[0] || topSide == getTrueFalseSides()[1])) {
@@ -160,13 +186,28 @@ void loop()
             } break;
         // cube speak mode
         case State::speaking_answer_explanation_score_turns_or_end:
-            state = State::speaking_category_selection;
-            //...
+            remove_cube_colors();
+            //play audio for playerturn
+
+            //TODO: if/else check game end
+            if(rounds_left_to_play == 0)
+            {
+                game_end();
+                state = State::speaking_game_end;
+            }
+            else{
+                state = State::speaking_player_turn;
+            }
             break;
     
         case State::speaking_category_selection:
             state = State::waiting_for_category_selection;
             //...
+            break;
+        case State::speaking_game_end:
+            if(!speaker_is_playing()){
+                state = State::speaking_player_turn;
+            }
             break;
         default: break;
         // dummy case to add more cases/states later
