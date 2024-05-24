@@ -3,27 +3,31 @@
 
 #include "speaker.h"
 #include "sd.h"
+#include "question_getter.h"
  
-unsigned int t;
 
 void setup() {
     Serial.begin(115200);
     
     sd_setup();
     speaker_setup();
+
+    sd_print_file("/test.txt");
+    QuestionGetter qg("/categories");
     
-    speaker_play_file("/MYMUSIC.mp3");
-    t = millis();
+    for (const auto &c : qg.categories)
+    {
+        Serial.println(c.name.c_str());
+        for (const auto &q : c.questions)
+        {
+            Serial.println(q.path_to_question.c_str());
+            Serial.println(q.path_to_explanation.c_str());
+            Serial.println(q.answer);
+        }
+        Serial.println();
+    }
 }
  
 void loop()
 {
-    // needs to be called regularly without big delays to send audio to speaker
-    speaker_loop();
-    // example how we can stop playing a song after 5 seconds
-    if (millis() - t > 5 * 1000)
-    {
-        speaker_pause_resume();
-        t = millis();
-    }
 }

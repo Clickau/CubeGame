@@ -52,9 +52,9 @@ private:
                 while (File question_file = category_dir.openNextFile()) {
                     if (question_file.isDirectory()) {
                         const char *question_number = question_file.name();
-                        std::string question_path = std::string(question_file.path()) + question_number + "_que.mp3";
-                        std::string answer_path = std::string(question_file.path()) + question_number + "_ans.txt";
-                        std::string explanation_path = std::string(question_file.path()) + question_number + "_exp.mp3";
+                        std::string question_path = std::string(question_file.path()) + "/" + question_number + "_que.mp3";
+                        std::string answer_path = std::string(question_file.path()) + "/" + question_number + "_ans.txt";
+                        std::string explanation_path = std::string(question_file.path()) + "/" + question_number + "_exp.mp3";
 
                         bool answer = readAnswer(answer_path);
                         Question question(question_path, answer, explanation_path);
