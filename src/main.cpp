@@ -21,7 +21,7 @@ std::vector<Player> players;
 int current_player_index = 1;
 
 Question current_question("", false, "");
-QuestionGetter qg("/categories");
+QuestionGetter qg("/questions");
 
 int current_true_false_sides [] = {-1, -1};
 
@@ -128,8 +128,9 @@ void setup() {
     
     sd_setup();
     speaker_setup();
+    gyro_setup();
+    led_setup();
 
-    sd_print_file("/test.txt");
     qg.loadCategories();
 
     for (int a = 0; a < 12; a++) {
@@ -138,18 +139,6 @@ void setup() {
         colors_black[a] = 0x000000;
     }
     
-    for (const auto &c : qg.categories)
-    {
-        Serial.println(c.name.c_str());
-        for (const auto &q : c.questions)
-        {
-            Serial.println(q.path_to_question.c_str());
-            Serial.println(q.path_to_explanation.c_str());
-            Serial.println(q.answer);
-        }
-        Serial.println();
-    }
-
     change_current_player();
 }
 
