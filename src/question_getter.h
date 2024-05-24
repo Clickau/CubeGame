@@ -7,7 +7,7 @@
 
 #include "sd.h"
 
-unsigned int colors[] = {0x0000FF, 0x00FF00, 0xFFFF00, 0xFF0000};
+unsigned int colors[] = {0x0000FF, 0x00FF00, 0xFFFF00, 0xFF0000, 0xFFFFFF};
 
 class QuestionGetter {
 public:
@@ -33,7 +33,7 @@ public:
         }
     }
 
-    void loadCategories() {
+    void loadCategories(int numberOfCategories) {
         const char *base_path = "/questions";
         categories.clear();
         File base_dir = sd_open_file(base_path);
@@ -56,6 +56,7 @@ public:
                 }
 
                 categories.push_back(category);
+                if (counter >= numberOfCategories) return;
             }
         }
     }

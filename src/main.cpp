@@ -8,6 +8,8 @@
 #include <iostream>
 #include "player.h"
 #include "question.h"
+#include "communication.h"
+#include "board_game.h"
 
 // current state of the cube
 State state = State::speaking_player_turn; // todo speaking
@@ -28,6 +30,8 @@ int current_true_false_sides [] = {-1, -1};
 uint32_t colors_red[12];
 uint32_t colors_green[12];
 uint32_t colors_black[12];
+
+bool isPlayingBoardGame = false;
 
 int* getNeighbors();
 
@@ -51,7 +55,7 @@ void game_end() {
     }
     players[0].resetPoints();
     players[1].resetPoints();
-    qg.loadCategories();
+    qg.loadCategories(4);
 }
 
 void remove_cube_colors() {
@@ -70,6 +74,7 @@ void set_category_colors() {
         led_display_side(neighbors[i], colors);
         qg.categories[i].setCurrentSide(neighbors[i]);
     }
+    delete[] neighbors;
 } 
 
 void set_true_false_colors() {
@@ -137,6 +142,7 @@ void setup() {
     speaker_setup();
     gyro_setup();
     led_setup();
+    communication_setup();
 
     int o;
     while (o = gyro_get_orientation() == -1)
@@ -145,7 +151,7 @@ void setup() {
     }
     topSide = o;
 
-    qg.loadCategories();
+    qg.loadCategories(4);
 
     for (int a = 0; a < 12; a++) {
         colors_red[a] = 0xff0000;
@@ -181,6 +187,18 @@ void getTrueFalseSides(int *array) {
 void loop()
 {
     speaker_loop();
+    if (communication_wait_for_client())
+    {
+        if (!isPlayingBoardGame)
+        {
+            isPlayingBoardGame = true;
+            board_setup();
+        }
+        board_loop();
+        return;
+    }
+    if (isPlayingBoardGame)
+        isPlayingBoardGame = false;
     int answer, orientation;
     switch(state) {
         case State::speaking_player_turn:
