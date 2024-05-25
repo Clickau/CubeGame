@@ -29,12 +29,12 @@ class FeedbackArrays {
     std::string getNextCorrectFeedback() {
         std::string next = correctFeedback[pointerCorrectArray];
         pointerCorrectArray = (pointerCorrectArray + 1) % 5;
+        return next;
     }
 
     std::string getNextInCorrectFeedback() {
         std::string next = incorrectFeedback[pointerIncorrectArray];
         pointerIncorrectArray = (pointerIncorrectArray + 1) % 5;
+        return next;
     }
-
-
 };

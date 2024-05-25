@@ -11,7 +11,7 @@
 #include "communication.h"
 
 // current state of the cube
-State state = State::speaking_player_turn; // todo speaking
+State state = State::waiting_for_game_selection; // todo speaking
 int topSide =  gyro_get_orientation();
 
 const int total_rounds = 1;
@@ -33,11 +33,19 @@ uint32_t colors_white[12];
 
 bool isPlayingBoardGame = false;
 
+bool collectFruitGame = false;
+bool is_correct = false;
+
 int* getNeighbors();
 void board_setup();
 void board_loop();
 
 void change_current_player() {
+    if(collectFruitGame && is_correct)
+    {
+        speaker_play_file(players[current_player_index].path_to_player_turn.c_str());
+        return;
+    }
     current_player_index++;
     if (current_player_index >= players.size()) {
         current_player_index = 0;
@@ -106,10 +114,12 @@ void select_and_play_question() {
 
 void check_answer(bool answer) {
     if(answer == current_question.answer) {
+        correct = true;
         players[current_player_index].addPoint();
         speaker_play_file("/feedback/correct/001.mp3");
     }
     else {
+        correct = false;
         speaker_play_file("/feedback/incorrect/001.mp3");
     }
 }
@@ -117,18 +127,21 @@ void check_answer(bool answer) {
 void play_game_score() {
     switch(players[current_player_index].points){
         case 0: 
-            speaker_play_file("/score/0.mp3"); break;
+            //TODO: speaker_play_file("/scoreInfo/score_info_0pt.mp3"); break;
         case 1: 
-            speaker_play_file("/score/1.mp3"); break;
+            speaker_play_file("/scoreInfo/score_info_1pt.mp3"); break;
         case 2: 
-            speaker_play_file("/score/2.mp3"); break;
-        case 3: 
-            speaker_play_file("/score/3.mp3"); break;
-        case 4: 
-            speaker_play_file("/score/4.mp3"); break;
-        case 5: 
-            speaker_play_file("/score/5.mp3"); break;
+            speaker_play_file("/scoreInfo/score_info_2pt.mp3"); break;
+        default: break;
     }
+}
+
+void select_game_type(){
+    getTrueFalseSides(current_true_false_sides);
+    if (current_true_false_sides[0] == -1 || current_true_false_sides[1] == -1) return;
+    led_display_side(current_true_false_sides[0], colors_white);
+    led_display_side(current_true_false_sides[1], colors_green);
+    speaker_play_file("game_selection.mp3"); break; // "Turn to white side for quiz and green side for fruit game."
 }
 
 void setup() {
@@ -204,6 +217,22 @@ void loop()
         isPlayingBoardGame = false;
     int answer, orientation;
     switch(state) {
+        case State::waiting_for_game_selection:
+            if(!speaker_is_playing()){
+                orientation = gyro_get_orientation();
+                if(topSide != orientation && orientation != -1) {
+                    topSide = orientation;
+                    remove_cube_colors()
+                    if(topSide == current_true_false_sides[1]) {// player selected green side
+                        collectFruitGame = true;
+                    }
+                    else if(topSide == current_true_false_sides[1]) {
+                        collectFruitGame = false;
+                    }
+                }
+                state = State::speaking_player_turn;
+            }
+            break;
         case State::speaking_player_turn:
             if(!speaker_is_playing()){
                 rounds_left_to_play = rounds_left_to_play - 1;
@@ -267,7 +296,7 @@ void loop()
             if(!speaker_is_playing()){
                 remove_cube_colors();
                 state = State::checking_game_end;
-                if(rounds_left_to_play == 0)
+                if(rounds_left_to_play == 0 && !collectFruitGame)
                 {
                     game_end();
                     state = State::speaking_game_end;
@@ -280,7 +309,8 @@ void loop()
         case State::speaking_game_end:
             if(!speaker_is_playing()){
                 rounds_left_to_play = total_rounds;
-                state = State::speaking_player_turn;
+                select_game_type();
+                state = State::waiting_for_game_selection;
             }
             break;
         default: break;
