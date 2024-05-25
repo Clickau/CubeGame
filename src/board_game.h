@@ -43,14 +43,14 @@ private:
     int position;
 } board;
 
-BoardState boardState = BoardState::speaking_category;
+BoardState boardState = BoardState::speaking_explanation;
 int boardTopSide = -1;
 int left_side = -1, front_side = -1, right_side = -1;
 int random_categories[5] = {0, 1, 2, 3, 4};
 int current_category = -1;
 Question question("", false, "");
 int points = total_points;
-bool correct;
+bool correct = true;
 
 // top, front
 int array_right_side[6][6] = {
@@ -85,6 +85,12 @@ void calculateSides()
 void randomize()
 {
     std::random_shuffle(random_categories, random_categories + 5);
+    uint32_t colorsarray[5];
+    for (int i = 0; i < 5; i++)
+    {
+        colorsarray[i] = qg1.categories[random_categories[i]].color;
+    }
+    communication_send_message(colorsarray);
 }
 
 void board_setup()
