@@ -14,7 +14,7 @@
 State state = State::waiting_for_game_selection; // todo speaking
 int topSide =  gyro_get_orientation();
 
-const int total_rounds = 1;
+const int total_rounds = 4;
 int rounds_left_to_play = total_rounds;
 
 std::vector<Player> players;
@@ -89,6 +89,12 @@ void set_category_colors() {
         qg.categories[i].setCurrentSide(neighbors[i]);
     }
     delete[] neighbors;
+
+
+    for (int i = 0; i < 4; i++)
+    {
+        Serial.printf("Category %d %s %d\n", i, qg.categories[i].name.c_str(), qg.categories[i].current_side);
+    }
 } 
 
 void set_true_false_colors() {
@@ -99,6 +105,7 @@ void set_true_false_colors() {
 
 void play_category() {
     for (const auto& category : qg.categories) {
+        Serial.printf("category for loop: %s %d\n", category.name.c_str(),category.current_side);
         if(category.current_side == topSide) {
             std::string path = "/category/category_" + category.name + ".mp3";
             speaker_play_file(path.c_str());
@@ -131,7 +138,7 @@ void check_answer(bool answer) {
 void play_game_score() {
     switch(players[current_player_index].points){
         case 0: 
-            //TODO: speaker_play_file("/scoreInfo/score_info_0pt.mp3"); break;
+            speaker_play_file("/scoreInfo/score_info_0pt.mp3"); break;
         case 1: 
             speaker_play_file("/scoreInfo/score_info_1pt.mp3"); break;
         case 2: 
@@ -142,10 +149,11 @@ void play_game_score() {
 
 void select_game_type(){
     getTrueFalseSides(current_true_false_sides);
+    Serial.printf("select_game_type: topSide: %d, true_side: %d, false_side: %d\n", topSide, current_true_false_sides[0], current_true_false_sides[1]);
     if (current_true_false_sides[0] == -1 || current_true_false_sides[1] == -1) return;
     led_display_side(current_true_false_sides[0], colors_white);
     led_display_side(current_true_false_sides[1], colors_green);
-    speaker_play_file("/game_selection.mp3"); // "Turn to white side for quiz and green side for fruit game."
+    speaker_play_file("/gameSelection_classicQuizCube.mp3");
 }
 
 void play_starting_animation(){
@@ -159,6 +167,8 @@ void play_starting_animation(){
 
 void setup() {
     Serial.begin(115200);
+
+
 
     Player player1("Player 1", "/turn/turn_player1.mp3");
     Player player2("Player 2", "/turn/turn_player2.mp3");
@@ -180,6 +190,10 @@ void setup() {
     topSide = o;
 
     qg.loadCategories(4);
+    for (int i = 0; i < 4; i++)
+    {
+        Serial.printf("Category %d %s %d\n", i, qg.categories[i].name.c_str(), qg.categories[i].current_side);
+    }
 
     for (int a = 0; a < 12; a++) {
         colors_red[a] = 0xff0000;
@@ -239,18 +253,18 @@ void loop()
         case State::waiting_for_game_selection:
             if(!speaker_is_playing()){
                 orientation = gyro_get_orientation();
-                if(topSide != orientation && orientation != -1) {
+                if(topSide != orientation && orientation != -1 && (orientation == current_true_false_sides[0] || orientation == current_true_false_sides[1])) {
                     topSide = orientation;
                     remove_cube_colors();
                     if(topSide == current_true_false_sides[1]) {// player selected green side
                         collectFruitGame = true;
                     }
-                    else if(topSide == current_true_false_sides[1]) {
+                    else if(topSide == current_true_false_sides[0]) {
                         collectFruitGame = false;
                     }
+                    change_current_player();
+                    state = State::speaking_player_turn;
                 }
-                change_current_player();
-                state = State::speaking_player_turn;
             }
             break;
         case State::speaking_player_turn:
@@ -269,6 +283,7 @@ void loop()
             orientation = gyro_get_orientation();
             if(topSide != orientation && orientation != -1) {
                 topSide = orientation; // update topSide
+                Serial.printf("new topSide: %d\n", topSide);
                 play_category();
                 state = State::speaking_category;
             } break;

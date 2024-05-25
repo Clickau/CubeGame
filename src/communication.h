@@ -21,11 +21,16 @@ bool communication_wait_for_client()
 
 void communication_send_message(uint32_t colors[5])
 {
-    char buf[512];
-    snprintf(buf, 512, "%u\n%u\n%u\n%u\n%u\n", colors[0], colors[1], colors[2], colors[3], colors[4]);
     HTTPClient http;
     http.begin("http://192.168.1.184/");
-    int code = http.GET();
+    String payload;
+    for (int i = 0; i < 5; i++)
+    {
+        payload += colors[i];
+        payload += '\n';
+    }
+    
+    int code = http.POST(payload);
     Serial.println(code);
     String message = http.getString();
     http.end();

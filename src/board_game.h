@@ -133,17 +133,19 @@ bool board_check_answer(bool answer) {
 
 void speak_game_lost()
 {
-    // todo
+    delay(2000);
+    ESP.restart();
 }
 
 void speak_game_won()
 {
-    // todo
+    speaker_play_file("/finishLine.mp3");
 }
 
 void speak_points()
 {
-    // todo
+    std::string s = std::string("/spins/spinsLeft_") + std::to_string(points) + ".mp3";
+    speaker_play_file(s.c_str());
 }
 
 void speak_explanation()
@@ -256,6 +258,12 @@ void board_loop()
             }
             boardTopSide = orientation;
             correct = board_check_answer(answer);
+            if (check_game_over())
+            {
+                speak_game_lost();
+                boardState = BoardState::speaking_game_end;
+                return;
+            }
             boardState = BoardState::speaking_feedback;
         }
         break;

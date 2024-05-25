@@ -7,7 +7,7 @@ const int mpu_pin_sda = 33;
 Adafruit_MPU6050 mpu;
 
 // returns the index (0-5) of the side that is up or -1 if it's currently moving
-int gyro_get_orientation()
+int gyro_get_orientation_internal()
 {
     sensors_event_t a, g, t;
     mpu.getEvent(&a, &g, &t);
@@ -37,6 +37,18 @@ int gyro_get_orientation()
     if (y && z && x1 && a.acceleration.x < 0)
         return 2;
     
+    return -1;
+}
+
+int gyro_get_orientation()
+{
+    int internal = gyro_get_orientation_internal();
+    if (internal == 0) return 4;
+    if (internal == 1) return 2;
+    if (internal == 2) return 5;
+    if (internal == 3) return 0;
+    if (internal == 4) return 3;
+    if (internal == 5) return 1;
     return -1;
 }
 
