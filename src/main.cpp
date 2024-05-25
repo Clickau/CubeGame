@@ -30,6 +30,9 @@ uint32_t colors_red[12];
 uint32_t colors_green[12];
 uint32_t colors_black[12];
 uint32_t colors_white[12];
+uint32_t colors_yellow[12];
+uint32_t colors_blue[12];
+uint32_t colors_violet[12];
 
 bool isPlayingBoardGame = false;
 
@@ -144,6 +147,15 @@ void select_game_type(){
     speaker_play_file("game_selection.mp3"); break; // "Turn to white side for quiz and green side for fruit game."
 }
 
+void play_starting_animation(){
+    uint32_t colors[6] = {colors_red, colors_green, colors_blue, colors_white, colors_yellow, colors_violet}
+    for(int i = 0; i < 6; ++i){
+        led_display_side(i, colors[i]);
+        delay(500);
+    }
+    remove_cube_colors();
+}
+
 void setup() {
     Serial.begin(115200);
 
@@ -173,9 +185,15 @@ void setup() {
         colors_green[a] = 0x00ff00;
         colors_black[a] = 0x000000;
         colors_white[a] = 0xffffff;
+        colors_yellow[a] = 0xffff00;
+        colors_blue[a] = 0x0000ff;
+        colors_violet[a] = 0xff00ff;
     }
+
+    play_starting_animation();
     
-    change_current_player();
+    //change_current_player();
+    select_game_type();
 }
 
 int* getNeighbors() {
@@ -230,6 +248,7 @@ void loop()
                         collectFruitGame = false;
                     }
                 }
+                change_current_player();
                 state = State::speaking_player_turn;
             }
             break;
@@ -302,6 +321,7 @@ void loop()
                     state = State::speaking_game_end;
                 }
                 else{
+                    change_current_player();
                     state = State::speaking_player_turn;
                 }
             }

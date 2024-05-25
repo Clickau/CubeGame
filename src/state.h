@@ -1,5 +1,6 @@
 #pragma once
  enum class State {
+    waiting_for_game_selection,
     waiting_for_category_selection,
     waiting_for_answer_selection,
     speaking_feedback,
