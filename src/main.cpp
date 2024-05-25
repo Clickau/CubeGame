@@ -9,7 +9,6 @@
 #include "player.h"
 #include "question.h"
 #include "communication.h"
-#include "board_game.h"
 
 // current state of the cube
 State state = State::speaking_player_turn; // todo speaking
@@ -30,10 +29,13 @@ int current_true_false_sides [] = {-1, -1};
 uint32_t colors_red[12];
 uint32_t colors_green[12];
 uint32_t colors_black[12];
+uint32_t colors_white[12];
 
 bool isPlayingBoardGame = false;
 
 int* getNeighbors();
+void board_setup();
+void board_loop();
 
 void change_current_player() {
     current_player_index++;
@@ -157,6 +159,7 @@ void setup() {
         colors_red[a] = 0xff0000;
         colors_green[a] = 0x00ff00;
         colors_black[a] = 0x000000;
+        colors_white[a] = 0xffffff;
     }
     
     change_current_player();
@@ -284,3 +287,6 @@ void loop()
     };
     
 }
+
+
+#include "board_game.h"
