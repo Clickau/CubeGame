@@ -42,6 +42,7 @@ bool is_correct = false;
 int* getNeighbors();
 void board_setup();
 void board_loop();
+void getTrueFalseSides(int *array);
 
 void change_current_player() {
     if(collectFruitGame && is_correct)
@@ -117,12 +118,12 @@ void select_and_play_question() {
 
 void check_answer(bool answer) {
     if(answer == current_question.answer) {
-        correct = true;
+        is_correct = true;
         players[current_player_index].addPoint();
         speaker_play_file("/feedback/correct/001.mp3");
     }
     else {
-        correct = false;
+        is_correct = false;
         speaker_play_file("/feedback/incorrect/001.mp3");
     }
 }
@@ -144,11 +145,11 @@ void select_game_type(){
     if (current_true_false_sides[0] == -1 || current_true_false_sides[1] == -1) return;
     led_display_side(current_true_false_sides[0], colors_white);
     led_display_side(current_true_false_sides[1], colors_green);
-    speaker_play_file("game_selection.mp3"); break; // "Turn to white side for quiz and green side for fruit game."
+    speaker_play_file("/game_selection.mp3"); // "Turn to white side for quiz and green side for fruit game."
 }
 
 void play_starting_animation(){
-    uint32_t colors[6] = {colors_red, colors_green, colors_blue, colors_white, colors_yellow, colors_violet}
+    uint32_t *colors[6] = {colors_red, colors_green, colors_blue, colors_white, colors_yellow, colors_violet};
     for(int i = 0; i < 6; ++i){
         led_display_side(i, colors[i]);
         delay(500);
@@ -240,7 +241,7 @@ void loop()
                 orientation = gyro_get_orientation();
                 if(topSide != orientation && orientation != -1) {
                     topSide = orientation;
-                    remove_cube_colors()
+                    remove_cube_colors();
                     if(topSide == current_true_false_sides[1]) {// player selected green side
                         collectFruitGame = true;
                     }
