@@ -55,4 +55,4 @@ Single player Mode with AI play partner. Remote Play. Personalization. Adaptive 
 
 ## Slides
 
-[Canva](https://www.canva.com/design/DAGGL-63odI/mzV7O-PFeGLx1_fE3UncIQ/view?utm_content=DAGGL-63odI&utm_campaign=designshare&utm_medium=link&utm_source=editor#8)
+[Canva](https://www.canva.com/design/DAGGL-63odI/mzV7O-PFeGLx1_fE3UncIQ/view?utm_content=DAGGL-63odI&utm_campaign=designshare&utm_medium=link&utm_source=editor#1)
